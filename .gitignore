@@ -1,0 +1,11 @@
+# AI assistant / tooling
+.claude/
+.superpowers/
+docs/
+.serena/
+
+# Tests
+tests/
+
+# macOS
+.DS_Store
