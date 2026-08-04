@@ -6,7 +6,7 @@
 
 **Architecture:** Keep the existing two-image CSS crossfade and asset paths unchanged. Treat the hover JPEG as a curated visual asset created from the two supplied references, while adding a pure plausibility check to the existing crop builder so an implausible automatic hover-face detection fails closed. Make the biography edit as an isolated HTML copy change.
 
-**Tech Stack:** Static HTML/CSS, Python 3.13, Pillow 12, OpenCV 4.13, standard-library `unittest`, ImageGen, local HTTP/browser visual verification.
+**Tech Stack:** Static HTML/CSS, Python 3.13, Pillow 12, OpenCV 4.13, standard-library `unittest`, ImageGen, FFmpeg 8, local HTTP/browser visual verification.
 
 ## Global Constraints
 
@@ -282,7 +282,14 @@ Inspect the returned candidate at original detail before accepting it. If the id
 
 - [ ] **Step 5: Install the approved candidate at the existing path**
 
-Use the ImageGen result as the replacement for `assets/profile/zhiyuan-xiao-hover.jpg`. Do not change the filename or the `<img>` element in `index.html`. Confirm the installed file is JPEG, opaque, and exactly 512 × 512; if ImageGen did not return those exact dimensions, ask ImageGen to regenerate the same approved composition as an exact 512 × 512 square instead of resizing or repainting it with Python.
+Use the ImageGen result as the visual source for `assets/profile/zhiyuan-xiao-hover.jpg`. Do not change the filename or the `<img>` element in `index.html`. If the approved candidate is already a 512 × 512 JPEG, copy it directly. Otherwise perform only the required square downsample and JPEG encoding with the installed FFmpeg 8 binary:
+
+```powershell
+$candidatePath = (Resolve-Path $imageGenCandidatePath).Path
+ffmpeg -y -i $candidatePath -vf "scale=512:512:flags=lanczos" -frames:v 1 -q:v 2 assets/profile/zhiyuan-xiao-hover.jpg
+```
+
+Bind `$imageGenCandidatePath` to the exact local output path returned by the immediately preceding ImageGen call. The candidate must already be square; do not stretch a non-square composition. Do not use Python to crop, mask, repaint, or resize the image.
 
 - [ ] **Step 6: Run automated asset checks**
 
