@@ -15,6 +15,16 @@ HOVER_PNG = Path("assets/profile/zhiyuan-xiao-hover.png")
 
 
 class TransparentAvatarAssetContractTest(unittest.TestCase):
+    def test_index_integrates_transparent_png_avatar_assets(self):
+        html = Path("index.html").read_text(encoding="utf-8")
+        self.assertIn('src="assets/profile/zhiyuan-xiao.png"', html)
+        self.assertIn('src="assets/profile/zhiyuan-xiao-hover.png"', html)
+        self.assertIn("background: transparent", html)
+        self.assertIn("@media (hover: hover) and (pointer: fine)", html)
+        self.assertIn("@media (prefers-reduced-motion: reduce)", html)
+        self.assertNotIn('src="assets/profile/zhiyuan-xiao.jpg"', html)
+        self.assertNotIn('src="assets/profile/zhiyuan-xiao-hover.jpg"', html)
+
     def test_portraits_are_rgba_with_transparent_exterior(self):
         for path in (DEFAULT_PNG, HOVER_PNG):
             image = Image.open(path)
