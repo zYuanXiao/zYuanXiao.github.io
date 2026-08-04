@@ -37,10 +37,19 @@
     /* ---------- Header / Bio ---------- */
     header.hero { padding: 66px 0 40px; display: flex; gap: 42px; align-items: flex-start; }
     .avatar {
-      flex: 0 0 128px; width: 128px; height: 128px; border-radius: 18px;
+      position: relative; flex: 0 0 128px; width: 128px; height: 128px; border-radius: 18px;
       overflow: hidden; background: var(--tag-bg);
     }
-    .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .avatar img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; display: block; transition: opacity .25s ease;
+    }
+    .avatar .av-hover { opacity: 0; }
+    .avatar:hover .av-hover { opacity: 1; }
+    .avatar:hover .av-default { opacity: 0; }
+    @media (prefers-reduced-motion: reduce) {
+      .avatar img { transition: none; }
+    }
     .hero h1 { font-family: var(--serif); font-weight: 600; font-size: 40px; letter-spacing: -.5px; margin: 0 0 4px; }
     .hero .role { color: var(--muted); font-size: 16.5px; line-height: 1.5; margin: 0 0 12px; }
     .hero .role b { color: var(--text); font-weight: 600; }
@@ -131,7 +140,8 @@
     <!-- ===================== HEADER / BIO ===================== -->
     <header class="hero">
       <div class="avatar">
-        <img src="assets/profile/zhiyuan-xiao.jpg" alt="Portrait of Zhiyuan Xiao" width="512" height="512">
+        <img class="av-default" src="assets/profile/zhiyuan-xiao.jpg" alt="Portrait of Zhiyuan Xiao" width="512" height="512">
+        <img class="av-hover" src="assets/profile/zhiyuan-xiao-hover.jpg" alt="" aria-hidden="true" width="512" height="512" loading="lazy">
       </div>
       <div>
         <h1>Zhiyuan Xiao</h1>
