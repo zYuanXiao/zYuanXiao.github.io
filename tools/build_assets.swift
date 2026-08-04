@@ -80,10 +80,8 @@ func drawLabel(_ text: String, x: CGFloat) {
 func build(inputDirectory: URL, outputDirectory: URL) throws {
     let fileManager = FileManager.default
     let companyDirectory = outputDirectory.appendingPathComponent("companies", isDirectory: true)
-    let profileDirectory = outputDirectory.appendingPathComponent("profile", isDirectory: true)
     let publicationDirectory = outputDirectory.appendingPathComponent("publications", isDirectory: true)
     try fileManager.createDirectory(at: companyDirectory, withIntermediateDirectories: true)
-    try fileManager.createDirectory(at: profileDirectory, withIntermediateDirectories: true)
     try fileManager.createDirectory(at: publicationDirectory, withIntermediateDirectories: true)
 
     let standardInput = inputDirectory.appendingPathComponent("standard-robotics.png")
@@ -125,21 +123,8 @@ func build(inputDirectory: URL, outputDirectory: URL) throws {
         to: companyDirectory.appendingPathComponent("definesys.png")
     )
 
-    let profile = try loadImage(inputDirectory.appendingPathComponent("profile.png"))
-    let profileBitmap = try render(size: NSSize(width: 512, height: 512)) {
-        profile.draw(
-            in: NSRect(x: 0, y: 0, width: 512, height: 512),
-            from: NSRect(origin: .zero, size: profile.size),
-            operation: .sourceOver,
-            fraction: 1
-        )
-    }
-    try write(
-        profileBitmap,
-        as: .jpeg,
-        properties: [.compressionFactor: 0.88],
-        to: profileDirectory.appendingPathComponent("zhiyuan-xiao.jpg")
-    )
+    // Profile avatars (zhiyuan-xiao.jpg + zhiyuan-xiao-hover.jpg) are built by
+    // tools/build_profile.py — a cross-platform face-aware square crop (Pillow + OpenCV).
 
     let source = try loadImage(inputDirectory.appendingPathComponent("aurora-source.jpg"))
     let output = try loadImage(inputDirectory.appendingPathComponent("aurora-output.jpg"))
