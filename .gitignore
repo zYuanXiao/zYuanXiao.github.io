@@ -1,6 +1,7 @@
 # AI assistant / tooling
 .claude/
 .superpowers/
+.worktrees/
 docs/
 .serena/
 
