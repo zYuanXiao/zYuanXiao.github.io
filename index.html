@@ -35,9 +35,9 @@
     .wrap { max-width: 980px; margin: 0 auto; padding: 0 32px; }
 
     /* ---------- Header / Bio ---------- */
-    header.hero { padding: 66px 0 40px; display: flex; gap: 42px; align-items: flex-start; }
+    header.hero { padding: 66px 0 40px; display: flex; gap: 36px; align-items: flex-start; }
     .avatar {
-      position: relative; flex: 0 0 128px; width: 128px; height: 128px; border-radius: 18px;
+      position: relative; flex: 0 0 176px; width: 176px; height: 176px; border-radius: 18px;
       overflow: hidden; background: var(--tag-bg);
     }
     .avatar img {
@@ -45,8 +45,10 @@
       object-fit: cover; display: block; transition: opacity .25s ease;
     }
     .avatar .av-hover { opacity: 0; }
-    .avatar:hover .av-hover { opacity: 1; }
-    .avatar:hover .av-default { opacity: 0; }
+    @media (hover: hover) and (pointer: fine) {
+      .avatar:hover .av-hover { opacity: 1; }
+      .avatar:hover .av-default { opacity: 0; }
+    }
     @media (prefers-reduced-motion: reduce) {
       .avatar img { transition: none; }
     }
@@ -118,7 +120,7 @@
     @media (max-width: 700px) {
       .wrap { padding: 0 22px; }
       header.hero { flex-direction: column; gap: 22px; padding-top: 44px; }
-      .avatar { width: 96px; height: 96px; flex-basis: 96px; }
+      .avatar { width: 120px; height: 120px; flex-basis: 120px; }
       .hero h1 { font-size: 33px; }
       .pub { flex-direction: column; gap: 16px; }
       .pub .thumb { width: 100%; height: auto; flex-basis: auto; }
@@ -141,7 +143,7 @@
     <header class="hero">
       <div class="avatar">
         <img class="av-default" src="assets/profile/zhiyuan-xiao.jpg" alt="Portrait of Zhiyuan Xiao" width="512" height="512">
-        <img class="av-hover" src="assets/profile/zhiyuan-xiao-hover.jpg" alt="" aria-hidden="true" width="512" height="512" loading="lazy">
+        <img class="av-hover" src="assets/profile/zhiyuan-xiao-hover.jpg" alt="" aria-hidden="true" width="512" height="512">
       </div>
       <div>
         <h1>Zhiyuan Xiao</h1>
