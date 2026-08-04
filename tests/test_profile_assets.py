@@ -7,8 +7,8 @@ import numpy as np
 from PIL import Image
 
 
-DEFAULT = Path("assets/profile/zhiyuan-xiao.jpg")
-HOVER = Path("assets/profile/zhiyuan-xiao-hover.jpg")
+DEFAULT = Path("assets/profile/zhiyuan-xiao.png")
+HOVER = Path("assets/profile/zhiyuan-xiao-hover.png")
 
 
 def eye_pair(path):

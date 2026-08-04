@@ -10,6 +10,27 @@ from PIL import Image
 from tools.make_avatar_transparent import build_rgba_from_rgb
 
 
+DEFAULT_PNG = Path("assets/profile/zhiyuan-xiao.png")
+HOVER_PNG = Path("assets/profile/zhiyuan-xiao-hover.png")
+
+
+class TransparentAvatarAssetContractTest(unittest.TestCase):
+    def test_portraits_are_rgba_with_transparent_exterior(self):
+        for path in (DEFAULT_PNG, HOVER_PNG):
+            image = Image.open(path)
+            self.assertEqual(image.size, (512, 512))
+            self.assertEqual(image.mode, "RGBA")
+            alpha = np.asarray(image)[:, :, 3]
+            self.assertTrue(np.all(alpha[:2, :2] == 0))
+            self.assertTrue(np.all(alpha[:2, -2:] == 0))
+            self.assertTrue(np.all(alpha[-2:, :2] == 0))
+            self.assertTrue(np.all(alpha[-2:, -2:] == 0))
+            transparent_fraction = float((alpha == 0).mean())
+            self.assertGreater(transparent_fraction, 0.01)
+            self.assertLess(transparent_fraction, 0.40)
+            self.assertGreater(float((alpha[154:358, 154:358] >= 250).mean()), 0.98)
+
+
 class EdgeConnectedMaskTest(unittest.TestCase):
     def test_removes_only_border_connected_paper(self):
         rgb = np.full((64, 64, 3), (246, 243, 236), dtype=np.uint8)
