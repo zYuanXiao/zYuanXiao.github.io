@@ -15,6 +15,7 @@
 - Keep the existing 176 px desktop and 120 px mobile avatar sizes, asset paths, crossfade, and page layout.
 - Preserve the real face, glasses, hairstyle, expression, clothing, and identity from the source photograph.
 - Extend the photograph almost to all four edges, leaving only a naturally varied 0–10 px warm-white paper reveal like the watercolor reference; do not use transparency, a central oval, a perfect hard circle, a wide white ring, or watercolor stylization of the person.
+- The final user-selected image at `C:/Users/yuanx/AppData/Local/Temp/codex-clipboard-ed4dfbe2-b107-4605-85a0-8682c3f08aba.png` is authoritative and supersedes the numeric edge-width guidance where they differ. Preserve its composition exactly; only square downsampling and JPEG encoding are allowed.
 - Target face-center alignment within approximately 8 px and face-height alignment within approximately 10 percent by visual overlay.
 - Remove only `3D generation and reconstruction` and the resulting unnecessary list punctuation from the biography.
 - Use `apply_patch` for repository text edits. Do not use Python to transform or paint the image; use ImageGen for the visual edit.
@@ -273,26 +274,22 @@ python -m unittest discover -s tests -p "test_profile_assets.py" -v
 
 Expected: FAIL because at least one corner of the current full-bleed wood/sleeve crop is not bright paper.
 
-- [ ] **Step 4: Generate the candidate with the ImageGen skill**
+- [ ] **Step 4: Inspect the user-selected final composition**
 
-Read and use the `imagegen` skill. Call ImageGen with both referenced image paths in the order shown above and this prompt:
+Inspect `C:/Users/yuanx/AppData/Local/Temp/codex-clipboard-ed4dfbe2-b107-4605-85a0-8682c3f08aba.png` at original detail. Verify that it is a square RGB image, retains the authentic face, glasses, hair, expression, and navy shirt, uses the approved natural watercolor-like paper edge, and contains no text or transparency.
 
-```text
-Create the final hover portrait asset as an exact square 512 by 512 pixel opaque image. Image 1 is only the composition, scale, natural paper-edge, and face-position reference. Image 2 is the exact photographic identity and clothing source. Preserve the real person's face, glasses, hairstyle, expression, skin, navy shirt, and identity from image 2 without beautifying, repainting, or inventing details. Reframe image 2 to a head-and-shoulders crop whose face center, visible face size, top of hair, and shoulder height closely match image 1. Extend the authentic photograph and its restrained indoor background almost to all four square edges. Leave only a 0–10 pixel warm-white paper reveal at the outside boundary, following the reference watercolor's soft, natural, organically varied termination. Some portions may touch the square edge while small paper gaps remain at corners and selected edge segments. Do not create a central oval, perfect geometric circle, wide white ring, hard border, transparent background, picture-frame border, deliberately noisy/random contour, or watercolor-stylized person. No text and no new objects.
-```
-
-Inspect the returned candidate at original detail before accepting it. If the identity or clothes change, repeat the edit from the original two references with `Preserve image 2 pixel-faithfully; change only crop, mask boundary, and paper surround.` If the paper reveal exceeds 10 px or reads as a floating oval, repeat with `Expand the existing photographic region to within 0–10 pixels of every edge; keep only a soft natural watercolor-like paper termination, not a circle or wide ring.`
+Do not call ImageGen for this step. The user's selected bitmap is the final art direction and must not be regenerated or modified beyond size/format conversion.
 
 - [ ] **Step 5: Install the approved candidate at the existing path**
 
-Use the ImageGen result as the visual source for `assets/profile/zhiyuan-xiao-hover.jpg`. Do not change the filename or the `<img>` element in `index.html`. If the approved candidate is already a 512 × 512 JPEG, copy it directly. Otherwise perform only the required square downsample and JPEG encoding with the installed FFmpeg 8 binary:
+Use the selected PNG as the visual source for `assets/profile/zhiyuan-xiao-hover.jpg`. Do not change the filename or the `<img>` element in `index.html`. Perform only the required square downsample and JPEG encoding with the installed FFmpeg 8 binary:
 
 ```powershell
-$candidatePath = (Resolve-Path $imageGenCandidatePath).Path
+$candidatePath = (Resolve-Path 'C:/Users/yuanx/AppData/Local/Temp/codex-clipboard-ed4dfbe2-b107-4605-85a0-8682c3f08aba.png').Path
 ffmpeg -y -i $candidatePath -vf "scale=512:512:flags=lanczos" -frames:v 1 -q:v 2 assets/profile/zhiyuan-xiao-hover.jpg
 ```
 
-Bind `$imageGenCandidatePath` to the exact local output path returned by the immediately preceding ImageGen call. The candidate must already be square; do not stretch a non-square composition. Do not use Python to crop, mask, repaint, or resize the image.
+The selected candidate is already square. Do not crop, mask, repaint, regenerate, or otherwise redesign it, and do not use Python to edit or resize it.
 
 - [ ] **Step 6: Run automated asset checks**
 

@@ -4,6 +4,8 @@
 **Status:** Approved
 **Scope:** Recompose the hover photograph so it aligns with the resting watercolor portrait and shares its paper-like negative space, plus one exact biography copy cleanup requested alongside the visual change.
 
+**Final user-selected asset:** `C:/Users/yuanx/AppData/Local/Temp/codex-clipboard-ed4dfbe2-b107-4605-85a0-8682c3f08aba.png`. This exact composition supersedes earlier numeric edge-width guidance. Implementation may only resize and encode it for the existing project path; it must not regenerate, repaint, recrop, or redesign the selected image.
+
 ## Context
 
 The home-page avatar already crossfades from `assets/profile/zhiyuan-xiao.jpg` to `assets/profile/zhiyuan-xiao-hover.jpg`. The current hover asset is unusable because the build script's Haar cascade selected a false-positive face near the lower-left of the source photograph, so the generated square shows background and a sleeve instead of the person.
@@ -35,7 +37,7 @@ The final hover asset remains an opaque 512 × 512 square at `assets/profile/zhi
 1. A warm-white paper base fills the complete square.
 2. The original photograph is manually reframed into a head-and-shoulders composition.
 3. The photographic region reaches almost to every edge instead of sitting inside a central oval.
-4. The warm-white reveal remains approximately 0–10 px wide, with some portions touching the square edge and other portions receding slightly.
+4. The warm-white reveal follows the exact user-selected image, with some portions touching the square edge and other portions receding naturally.
 5. Its contour follows the watercolor reference's natural brush-and-paper termination: softly feathered and organically varied, but not made noisy or random for its own sake.
 6. The interior retains the authentic photograph and a limited amount of its indoor background.
 
