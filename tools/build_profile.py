@@ -29,16 +29,33 @@ FACE_RATIO = 3.6          # square side = face_height * FACE_RATIO  (same for bo
 HEADROOM = -0.45          # shift crop centre up by 0.45*face_h (headroom above head)
 JPEG_QUALITY = 88
 
-CASCADE = cv2.CascadeClassifier(
-    cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+_CASCADE_FILES = [
+    "haarcascade_frontalface_alt2.xml",
+    "haarcascade_frontalface_default.xml",
+    "haarcascade_profileface.xml",
+]
+_WINNING_CASCADE = None  # set by detect_face(); read by build() for the face= log line
 
 
 def detect_face(gray: np.ndarray):
-    faces = CASCADE.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(60, 60))
-    if len(faces) == 0:
+    global _WINNING_CASCADE
+    best = None
+    best_name = None
+    for name in _CASCADE_FILES:
+        cascade = cv2.CascadeClassifier(cv2.data.haarcascades + name)
+        if cascade.empty():
+            continue
+        faces = cascade.detectMultiScale(
+            gray, scaleFactor=1.05, minNeighbors=3, minSize=(40, 40)
+        )
+        for f in faces:
+            if best is None or f[2] * f[3] > best[2] * best[3]:
+                best = (int(f[0]), int(f[1]), int(f[2]), int(f[3]))
+                best_name = name
+    _WINNING_CASCADE = best_name
+    if best is None:
         return None
-    x, y, w, h = max(faces, key=lambda f: f[2] * f[3])
-    return int(x), int(y), int(w), int(h)
+    return best
 
 
 def square_around(cx: int, cy: int, side: int, W: int, H: int):
@@ -70,7 +87,7 @@ def build(src: str, out: Path, anchor):
             cx = fx + fw // 2
             cy = int(fy + fh // 2 + HEADROOM * fh)
             side = int(fh * FACE_RATIO)
-            print(f"  face=({fx},{fy},{fw}x{fh})")
+            print(f"  face=({fx},{fy},{fw}x{fh}) via {_WINNING_CASCADE}")
 
     x0, y0, side = square_around(cx, cy, side, W, H)
     print(f"  crop rect=({x0},{y0},{side}x{side}) from {W}x{H}")
