@@ -1,6 +1,11 @@
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
 import unittest
 
 import numpy as np
+from PIL import Image
 
 from tools.make_avatar_transparent import build_rgba_from_rgb
 
@@ -22,3 +27,27 @@ class EdgeConnectedMaskTest(unittest.TestCase):
         rgb[:36, 31:34] = (248, 247, 244)
         with self.assertRaisesRegex(ValueError, "protected central portrait"):
             build_rgba_from_rgb(rgb)
+
+    def test_cli_rejects_non_png_output(self):
+        rgb = np.full((512, 512, 3), (246, 243, 236), dtype=np.uint8)
+        rgb[52:460, 52:460] = (70, 90, 120)
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "source.png"
+            output = Path(directory) / "avatar.jpg"
+            Image.fromarray(rgb).save(source)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "tools/make_avatar_transparent.py",
+                    "--input",
+                    str(source),
+                    "--output",
+                    str(output),
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn(".png", result.stderr)
+            self.assertFalse(output.exists())

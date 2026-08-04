@@ -86,11 +86,14 @@ def main() -> None:
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
 
-    rgba = build_rgba(args.input)
     output = args.output
+    if output.suffix.lower() != ".png":
+        parser.error("--output must use a .png suffix")
+
+    rgba = build_rgba(args.input)
     temporary = output.with_name(f".{output.stem}.tmp{output.suffix}")
     try:
-        rgba.save(temporary)
+        rgba.save(temporary, format="PNG")
         temporary.replace(output)
     finally:
         if temporary.exists():
