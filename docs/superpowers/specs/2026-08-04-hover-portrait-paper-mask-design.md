@@ -45,12 +45,12 @@ The final hover asset remains an opaque 512 × 512 square at `assets/profile/zhi
 
 The existing 512 × 512 watercolor asset is the visual reference. The hover photograph should target:
 
-- face center within approximately 8 px of the watercolor face center;
-- visible face height within approximately 10 percent of the watercolor face height;
+- for the final user-selected bitmap, eye midpoint within 16 px of the watercolor eye midpoint;
+- for the final user-selected bitmap, inter-eye scale within 22 percent of the watercolor reference;
 - top of hair and shoulder line at approximately the same vertical positions;
 - enough shoulder width to make the transition feel continuous without allowing the shirt to dominate the crop.
 
-These are perceptual acceptance tolerances, not a demand for pixel-identical anatomy. A 50-percent opacity overlay and the live CSS crossfade will be used to judge alignment.
+These final bounds preserve the exact composition explicitly selected by the user and prevent later conversion drift. They supersede the earlier 8 px / 10 percent targets, which would require recropping the selected bitmap. A 50-percent opacity overlay and the live CSS crossfade will still be used for perceptual review.
 
 ## Asset-Generation Approach
 

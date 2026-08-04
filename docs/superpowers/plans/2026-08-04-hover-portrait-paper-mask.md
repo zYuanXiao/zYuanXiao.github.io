@@ -16,9 +16,9 @@
 - Preserve the real face, glasses, hairstyle, expression, clothing, and identity from the source photograph.
 - Extend the photograph almost to all four edges, leaving only a naturally varied 0–10 px warm-white paper reveal like the watercolor reference; do not use transparency, a central oval, a perfect hard circle, a wide white ring, or watercolor stylization of the person.
 - The final user-selected image at `C:/Users/yuanx/AppData/Local/Temp/codex-clipboard-ed4dfbe2-b107-4605-85a0-8682c3f08aba.png` is authoritative and supersedes the numeric edge-width guidance where they differ. Preserve its composition exactly; only square downsampling and JPEG encoding are allowed.
-- Target face-center alignment within approximately 8 px and face-height alignment within approximately 10 percent by visual overlay.
+- Preserve the exact user-selected composition with an eye-midpoint regression bound of 16 px and an inter-eye-scale bound of 22 percent; these supersede the earlier 8 px / 10 percent targets that would require recropping the selected bitmap.
 - Remove only `3D generation and reconstruction` and the resulting unnecessary list punctuation from the biography.
-- Use `apply_patch` for repository text edits. Do not use Python to transform or paint the image; use ImageGen for the visual edit.
+- Use `apply_patch` for repository text edits. Do not use Python to transform or paint the image. The final user-selected bitmap requires only FFmpeg downsampling and JPEG encoding; do not regenerate it with ImageGen.
 
 ---
 
@@ -311,7 +311,7 @@ Expected: `assets/profile/zhiyuan-xiao-hover.jpg (512, 512) RGB JPEG`.
 
 - [ ] **Step 7: Verify visual alignment and preserve the watercolor asset**
 
-Use `view_image` at original detail for both avatar assets and compare them side by side. Then use the local browser crossfade to inspect the midpoint perceptually. Accept only if the face centers differ by approximately no more than 8 px, face heights differ by approximately no more than 10 percent, and the shoulder transition does not visibly jump.
+Use `view_image` at original detail for both avatar assets and compare them side by side. Then use the local browser crossfade to inspect the midpoint perceptually. For the exact user-selected bitmap, accept an eye-midpoint difference no greater than 16 px and an inter-eye-scale difference no greater than 22 percent; confirm the conversion itself introduces no further crop or landmark drift.
 
 Run `Get-FileHash assets/profile/zhiyuan-xiao.jpg -Algorithm SHA256` again and confirm it exactly matches the hash recorded in Step 1.
 
