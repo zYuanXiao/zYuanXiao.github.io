@@ -63,6 +63,19 @@ def detect_face(gray: np.ndarray):
     return (best[0], best[1], best[2], best[3], best_name)
 
 
+def face_is_plausible(face, width: int, height: int) -> bool:
+    """Reject detections too small or too close to portrait-frame edges."""
+    fx, fy, fw, fh, _ = face
+    center_x = (fx + fw / 2) / width
+    center_y = (fy + fh / 2) / height
+    relative_height = fh / min(width, height)
+    return (
+        0.18 <= center_x <= 0.82
+        and 0.08 <= center_y <= 0.68
+        and relative_height >= 0.04
+    )
+
+
 def square_around(cx: int, cy: int, side: int, W: int, H: int):
     side = min(side, min(W, H))
     half = side // 2
@@ -115,6 +128,19 @@ def main():
             print(f"  [{which}] {W}x{H}; manual center=({cx},{cy},side={side})")
         else:
             face = detect_face(gray)
+            if face is not None and not face_is_plausible(face, W, H):
+                fx, fy, fw, fh, name = face
+                print(
+                    f"  [{which}] [warn] implausible face=({fx},{fy},{fw}x{fh}) "
+                    f"via {name}",
+                    file=sys.stderr,
+                )
+                face = None
+            if face is None and which == "hover":
+                raise SystemExit(
+                    "hover face detection missing or implausible; "
+                    "pass --hover-center cx,cy,side"
+                )
             if face is None:
                 print(f"  [{which}] {W}x{H}; [warn] no face -> centre-square crop "
                       f"(override with --{which}-center cx,cy,side)", file=sys.stderr)
