@@ -10,9 +10,10 @@ The ratio is shared across all images (min of each image's achievable ratio,
 capped by FACE_RATIO) so the person keeps a roughly identical scale/proportion
 across the two photos — a hover-swap should not visibly zoom.
 
-If detection fails for an image the script falls back to a centre-square crop
-and prints a warning; you can instead pass an explicit crop centre with
---default-center / --hover-center (cx,cy,side in source pixels).
+If detection fails for the default image the script falls back to a
+centre-square crop and prints a warning. Hover-image detection fails closed:
+pass an explicit --hover-center (cx,cy,side in source pixels); use
+--default-center to override the default crop as well.
 
 Example (Windows):
   python tools/build_profile.py \
