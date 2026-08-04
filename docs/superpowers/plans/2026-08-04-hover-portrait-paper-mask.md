@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace the broken hover portrait with an identity-preserving, watercolor-aligned photograph inside an organic paper-mask composition, prevent the crop script from silently repeating the error, and remove the requested biography phrase.
+**Goal:** Replace the broken hover portrait with an identity-preserving, watercolor-aligned photograph whose near-full-frame edge ends naturally on paper, prevent the crop script from silently repeating the error, and remove the requested biography phrase.
 
 **Architecture:** Keep the existing two-image CSS crossfade and asset paths unchanged. Treat the hover JPEG as a curated visual asset created from the two supplied references, while adding a pure plausibility check to the existing crop builder so an implausible automatic hover-face detection fails closed. Make the biography edit as an isolated HTML copy change.
 
@@ -14,7 +14,7 @@
 - Keep `assets/profile/zhiyuan-xiao-hover.jpg` as an opaque 512 × 512 JPEG.
 - Keep the existing 176 px desktop and 120 px mobile avatar sizes, asset paths, crossfade, and page layout.
 - Preserve the real face, glasses, hairstyle, expression, clothing, and identity from the source photograph.
-- Use a large softly irregular oval photograph on warm-white paper; do not use transparency, a perfect hard circle, a full-bleed photograph, or watercolor stylization of the person.
+- Extend the photograph almost to all four edges, leaving only a naturally varied 0–10 px warm-white paper reveal like the watercolor reference; do not use transparency, a central oval, a perfect hard circle, a wide white ring, or watercolor stylization of the person.
 - Target face-center alignment within approximately 8 px and face-height alignment within approximately 10 percent by visual overlay.
 - Remove only `3D generation and reconstruction` and the resulting unnecessary list punctuation from the biography.
 - Use `apply_patch` for repository text edits. Do not use Python to transform or paint the image; use ImageGen for the visual edit.
@@ -210,7 +210,7 @@ git commit -m "fix: reject implausible hover face crops"
 **Interfaces:**
 - Consumes composition reference: `C:/Users/yuanx/Downloads/Flux2_Klein_9b_kv_00058_.png`.
 - Consumes identity/photo source: `C:/Users/yuanx/Downloads/Weixin Image_20260803183116_2217_7.jpg`.
-- Produces: an opaque 512 × 512 JPEG at `assets/profile/zhiyuan-xiao-hover.jpg` with bright paper corners and a non-blank photographic center.
+- Produces: an opaque 512 × 512 JPEG at `assets/profile/zhiyuan-xiao-hover.jpg` with near-full photographic coverage, small paper corners, and a naturally varied 0–10 px watercolor-like edge.
 
 - [ ] **Step 1: Record the default asset hash**
 
@@ -243,14 +243,17 @@ class HoverAssetContractTest(unittest.TestCase):
         self.assertEqual(image.size, (512, 512))
         pixels = np.asarray(image, dtype=np.float32)
         corners = [
-            pixels[:48, :48],
-            pixels[:48, -48:],
-            pixels[-48:, :48],
-            pixels[-48:, -48:],
+            pixels[:4, :4],
+            pixels[:4, -4:],
+            pixels[-4:, :4],
+            pixels[-4:, -4:],
         ]
         for corner in corners:
             self.assertGreater(float(corner.mean()), 225.0)
             self.assertLess(float(corner.std()), 35.0)
+        channel_spread = pixels.max(axis=2) - pixels.min(axis=2)
+        paper_like = (pixels.mean(axis=2) > 225.0) & (channel_spread < 30.0)
+        self.assertGreater(float((~paper_like).mean()), 0.78)
         center = pixels[144:368, 144:368]
         self.assertGreater(float(center.std()), 25.0)
         self.assertLess(float(center.mean()), 220.0)
@@ -275,10 +278,10 @@ Expected: FAIL because at least one corner of the current full-bleed wood/sleeve
 Read and use the `imagegen` skill. Call ImageGen with both referenced image paths in the order shown above and this prompt:
 
 ```text
-Create the final hover portrait asset as an exact square 512 by 512 pixel opaque image. Image 1 is only the composition, scale, paper-negative-space, and face-position reference. Image 2 is the exact photographic identity and clothing source. Preserve the real person's face, glasses, hairstyle, expression, skin, navy shirt, and identity from image 2 without beautifying, repainting, or inventing details. Reframe image 2 to a head-and-shoulders crop whose face center, visible face size, top of hair, and shoulder height closely match image 1. Reveal the authentic photograph and a restrained amount of its indoor background inside one large centered organic oval or near-circle. The oval must be subtly irregular and have an 8–16 pixel soft feathered watercolor-wash edge. Outside it, fill the full square with opaque warm-white lightly textured paper, leaving clearly white corners and uneven negative-space gaps along parts of the sides. Do not make a perfect geometric circle, a hard border, a rectangular photo, a transparent background, a white picture-frame border, or a watercolor-stylized person. No text and no new objects.
+Create the final hover portrait asset as an exact square 512 by 512 pixel opaque image. Image 1 is only the composition, scale, natural paper-edge, and face-position reference. Image 2 is the exact photographic identity and clothing source. Preserve the real person's face, glasses, hairstyle, expression, skin, navy shirt, and identity from image 2 without beautifying, repainting, or inventing details. Reframe image 2 to a head-and-shoulders crop whose face center, visible face size, top of hair, and shoulder height closely match image 1. Extend the authentic photograph and its restrained indoor background almost to all four square edges. Leave only a 0–10 pixel warm-white paper reveal at the outside boundary, following the reference watercolor's soft, natural, organically varied termination. Some portions may touch the square edge while small paper gaps remain at corners and selected edge segments. Do not create a central oval, perfect geometric circle, wide white ring, hard border, transparent background, picture-frame border, deliberately noisy/random contour, or watercolor-stylized person. No text and no new objects.
 ```
 
-Inspect the returned candidate at original detail before accepting it. If the identity or clothes change, repeat the edit from the original two references with `Preserve image 2 pixel-faithfully; change only crop, mask boundary, and paper surround.` If the oval is too geometric, repeat with `Make the photo boundary organically asymmetric with softly feathered wash gaps, especially at the corners and side edges.`
+Inspect the returned candidate at original detail before accepting it. If the identity or clothes change, repeat the edit from the original two references with `Preserve image 2 pixel-faithfully; change only crop, mask boundary, and paper surround.` If the paper reveal exceeds 10 px or reads as a floating oval, repeat with `Expand the existing photographic region to within 0–10 pixels of every edge; keep only a soft natural watercolor-like paper termination, not a circle or wide ring.`
 
 - [ ] **Step 5: Install the approved candidate at the existing path**
 
@@ -372,7 +375,7 @@ Read and use the `browser:control-in-app-browser` skill. Open `http://127.0.0.1:
 
 - watercolor portrait appears at rest;
 - the avatar is 176 × 176 px;
-- hover crossfades to the centered paper-masked photograph;
+- hover crossfades to the near-full-frame photograph with a natural 0–10 px paper edge;
 - pointer exit restores the watercolor portrait;
 - biography no longer mentions 3D generation or reconstruction;
 - name, biography, and following sections do not overlap and there is no horizontal scrollbar.

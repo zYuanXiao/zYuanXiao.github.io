@@ -8,14 +8,14 @@
 
 The home-page avatar already crossfades from `assets/profile/zhiyuan-xiao.jpg` to `assets/profile/zhiyuan-xiao-hover.jpg`. The current hover asset is unusable because the build script's Haar cascade selected a false-positive face near the lower-left of the source photograph, so the generated square shows background and a sleeve instead of the person.
 
-The desired result is not a full-bleed square photograph, a transparent cutout, or a conventional hard circular avatar. It is an opaque square composition: a large, softly irregular oval photograph sits on a warm-white paper field, leaving visible negative space around parts of the image in the same spirit as the watercolor portrait.
+The desired result is not a full-bleed square photograph, a transparent cutout, or a conventional circular avatar. It is an opaque square composition: the photograph reaches almost to every edge, while a naturally uneven 0–10 px warm-white paper reveal follows the same kind of organic watercolor boundary as the resting portrait.
 
 ## Goals
 
 - Preserve the default watercolor portrait without modification.
 - Reframe the original photograph so the face, head scale, and shoulder height closely match the watercolor portrait during the crossfade.
-- Present the photograph inside a large organic oval with softly feathered, subtly uneven edges.
-- Fill the area outside the oval with an opaque warm-white paper treatment.
+- Extend the photograph almost to all four edges, with only a naturally uneven 0–10 px paper reveal.
+- Match the watercolor portrait's organic boundary rather than making the reveal deliberately random or geometrically regular.
 - Keep the existing asset path, hover behavior, responsive avatar sizes, and page layout unchanged.
 - Prevent the existing build script from silently recreating the false-positive sleeve crop.
 - Remove `3D generation and reconstruction` from the home-page biography while preserving natural grammar.
@@ -34,9 +34,9 @@ The final hover asset remains an opaque 512 × 512 square at `assets/profile/zhi
 
 1. A warm-white paper base fills the complete square.
 2. The original photograph is manually reframed into a head-and-shoulders composition.
-3. The photographic region is revealed through a large centered organic oval rather than filling the square.
-4. The oval leaves obvious warm-white negative space in all four corners and smaller, irregular gaps along parts of the sides.
-5. Its boundary uses an approximately 8–16 px soft transition with mild natural asymmetry, suggesting a watercolor wash ending on paper rather than a digital cutout.
+3. The photographic region reaches almost to every edge instead of sitting inside a central oval.
+4. The warm-white reveal remains approximately 0–10 px wide, with some portions touching the square edge and other portions receding slightly.
+5. Its contour follows the watercolor reference's natural brush-and-paper termination: softly feathered and organically varied, but not made noisy or random for its own sake.
 6. The interior retains the authentic photograph and a limited amount of its indoor background.
 
 ## Alignment Targets
@@ -76,7 +76,7 @@ Reject and regenerate or adjust the candidate if any of these occur:
 
 - the face, eyes, glasses, hair, expression, or shirt details are visibly altered;
 - the face is substantially smaller, larger, or offset from the watercolor reference;
-- the mask becomes a perfect hard circle or rectangular frame;
+- the mask becomes a central oval, perfect hard circle, rectangular frame, or wide white ring;
 - the paper surround is transparent, gray, strongly yellow, or covers important facial features;
 - the crop again emphasizes a sleeve or background instead of the person;
 - the asset is not a non-empty 512 × 512 image.
@@ -90,6 +90,7 @@ Reject and regenerate or adjust the candidate if any of these occur:
 5. Confirm that the existing layout has no new overlap or horizontal overflow.
 6. Confirm both image requests return HTTP 200 and the hover asset is non-empty and 512 × 512.
 7. Confirm `3D generation and reconstruction` no longer appears in `index.html` and the resulting two-item sentence has no unnecessary comma before `and`.
+8. Confirm the paper reveal is approximately 0–10 px at the outside edge and the photograph no longer reads as a small oval floating inside a white field.
 
 ## Files Expected to Change During Implementation
 
