@@ -21,6 +21,7 @@ The desired result is not a full-bleed square photograph, a transparent cutout, 
 - Keep the existing asset path, hover behavior, responsive avatar sizes, and page layout unchanged.
 - Prevent the existing build script from silently recreating the false-positive sleeve crop.
 - Remove `3D generation and reconstruction` from the home-page biography while preserving natural grammar.
+- Replace the site CV with the exact one-page PDF supplied at `C:/Users/yuanx/Desktop/zYuanXiao.github.io/Zhiyuan_Xiao_CV.pdf` while preserving the existing website filename and link.
 
 ## Non-goals
 
@@ -72,6 +73,10 @@ Replace the current research-interest sentence fragment so it reads:
 
 Only the requested `3D generation and reconstruction` topic and the now-unnecessary list punctuation are removed. The surrounding biography remains unchanged.
 
+## CV Asset Replacement
+
+Copy the user-supplied `C:/Users/yuanx/Desktop/zYuanXiao.github.io/Zhiyuan_Xiao_CV.pdf` to the isolated worktree's existing `Zhiyuan_Xiao_CV.pdf` path. Do not rewrite or recompress it. The supplied PDF is authoritative; the two files must have identical SHA-256 hashes after replacement. Keep the existing home-page CV URL unchanged.
+
 ## Error Handling and Rejection Criteria
 
 Reject and regenerate or adjust the candidate if any of these occur:
@@ -92,12 +97,14 @@ Reject and regenerate or adjust the candidate if any of these occur:
 5. Confirm that the existing layout has no new overlap or horizontal overflow.
 6. Confirm both image requests return HTTP 200 and the hover asset is non-empty and 512 × 512.
 7. Confirm `3D generation and reconstruction` no longer appears in `index.html` and the resulting two-item sentence has no unnecessary comma before `and`.
-8. Confirm the paper reveal is approximately 0–10 px at the outside edge and the photograph no longer reads as a small oval floating inside a white field.
+8. Confirm the installed hover image preserves the exact composition and natural paper edge of the final user-selected bitmap, with no additional crop or repainting.
+9. Confirm the installed CV is a readable, unencrypted one-page PDF, renders without clipping, matches the supplied PDF hash, and returns HTTP 200 from the existing CV link.
 
 ## Files Expected to Change During Implementation
 
 - `assets/profile/zhiyuan-xiao-hover.jpg`: replace the broken crop with the approved paper-mask composition.
 - `tools/build_profile.py`: add a guard or explicit-anchor workflow that prevents false-positive hover crops.
 - `index.html`: remove the requested biography phrase and repair the resulting list punctuation; do not change avatar layout or interaction code.
+- `Zhiyuan_Xiao_CV.pdf`: replace with the exact user-supplied PDF; keep the existing filename and link.
 
 The default watercolor asset is not expected to change.

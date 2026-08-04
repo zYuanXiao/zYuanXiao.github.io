@@ -18,6 +18,7 @@
 - The final user-selected image at `C:/Users/yuanx/AppData/Local/Temp/codex-clipboard-ed4dfbe2-b107-4605-85a0-8682c3f08aba.png` is authoritative and supersedes the numeric edge-width guidance where they differ. Preserve its composition exactly; only square downsampling and JPEG encoding are allowed.
 - Preserve the exact user-selected composition with an eye-midpoint regression bound of 16 px and an inter-eye-scale bound of 22 percent; these supersede the earlier 8 px / 10 percent targets that would require recropping the selected bitmap.
 - Remove only `3D generation and reconstruction` and the resulting unnecessary list punctuation from the biography.
+- Replace `Zhiyuan_Xiao_CV.pdf` with the exact file at `C:/Users/yuanx/Desktop/zYuanXiao.github.io/Zhiyuan_Xiao_CV.pdf`; preserve the existing filename/link and require identical SHA-256 hashes.
 - Use `apply_patch` for repository text edits. Do not use Python to transform or paint the image. The final user-selected bitmap requires only FFmpeg downsampling and JPEG encoding; do not regenerate it with ImageGen.
 
 ---
@@ -324,7 +325,73 @@ git commit -m "feat: add paper-masked hover portrait"
 
 ---
 
-### Task 4: Browser and Full Regression Verification
+### Task 4: CV Asset Replacement
+
+**Files:**
+- Modify: `Zhiyuan_Xiao_CV.pdf`
+
+**Interfaces:**
+- Consumes: `C:/Users/yuanx/Desktop/zYuanXiao.github.io/Zhiyuan_Xiao_CV.pdf` from the user's main checkout.
+- Produces: a byte-identical `Zhiyuan_Xiao_CV.pdf` in the isolated worktree, served by the existing CV link.
+
+- [ ] **Step 1: Verify the supplied source PDF**
+
+Run:
+
+```powershell
+$sourceCv = 'C:/Users/yuanx/Desktop/zYuanXiao.github.io/Zhiyuan_Xiao_CV.pdf'
+Get-FileHash -LiteralPath $sourceCv -Algorithm SHA256
+& 'C:/Users/yuanx/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe' -c "from pypdf import PdfReader; r=PdfReader(r'C:/Users/yuanx/Desktop/zYuanXiao.github.io/Zhiyuan_Xiao_CV.pdf'); assert len(r.pages)==1; assert not r.is_encrypted; print('pages=1 encrypted=False')"
+```
+
+Expected: SHA-256 `97BBDD690F6AA6CD9C0EB0B32388784B34DAD576143D39A9D6264FEDAB262136`, followed by `pages=1 encrypted=False`.
+
+- [ ] **Step 2: Copy the exact PDF into the worktree**
+
+Run from the isolated worktree:
+
+```powershell
+Copy-Item -LiteralPath 'C:/Users/yuanx/Desktop/zYuanXiao.github.io/Zhiyuan_Xiao_CV.pdf' -Destination 'Zhiyuan_Xiao_CV.pdf' -Force
+```
+
+Do not edit, rewrite, optimize, or recompress the PDF.
+
+- [ ] **Step 3: Verify byte identity and final rendering**
+
+Run:
+
+```powershell
+$sourceHash = (Get-FileHash -LiteralPath 'C:/Users/yuanx/Desktop/zYuanXiao.github.io/Zhiyuan_Xiao_CV.pdf' -Algorithm SHA256).Hash
+$installedHash = (Get-FileHash -LiteralPath 'Zhiyuan_Xiao_CV.pdf' -Algorithm SHA256).Hash
+if ($sourceHash -ne $installedHash) { throw "CV hash mismatch" }
+New-Item -ItemType Directory -Force -Path 'tmp/pdfs/cv-final' | Out-Null
+& 'C:/Users/yuanx/.cache/codex-runtimes/codex-primary-runtime/dependencies/native/poppler/Library/bin/pdftoppm.exe' -png -r 144 -f 1 -singlefile 'Zhiyuan_Xiao_CV.pdf' 'tmp/pdfs/cv-final/page'
+```
+
+Inspect `tmp/pdfs/cv-final/page.png` at original detail and confirm the one-page CV has no clipped text, overlaps, black boxes, or unreadable glyphs.
+
+- [ ] **Step 4: Verify the existing web link**
+
+Run:
+
+```powershell
+$response = Invoke-WebRequest -UseBasicParsing 'http://127.0.0.1:8765/Zhiyuan_Xiao_CV.pdf'
+if ($response.StatusCode -ne 200) { throw "CV HTTP status $($response.StatusCode)" }
+if ($response.RawContentLength -ne 372044) { throw "CV HTTP length $($response.RawContentLength)" }
+```
+
+Expected: PASS with no output.
+
+- [ ] **Step 5: Commit the exact replacement**
+
+```powershell
+git add Zhiyuan_Xiao_CV.pdf
+git commit -m "content: update CV"
+```
+
+---
+
+### Task 5: Browser and Full Regression Verification
 
 **Files:**
 - Verify only: `index.html`
@@ -335,7 +402,7 @@ git commit -m "feat: add paper-masked hover portrait"
 - Verify only: `tests/test_profile_assets.py`
 
 **Interfaces:**
-- Consumes: The completed copy, crop guard, and hover asset from Tasks 1–3.
+- Consumes: The completed copy, crop guard, hover asset, and CV replacement from Tasks 1–4.
 - Produces: Evidence that the page, interaction, assets, and regression tests satisfy the approved design.
 
 - [ ] **Step 1: Run the complete automated suite**
