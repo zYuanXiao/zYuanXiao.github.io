@@ -3,11 +3,16 @@
 Build two 512x512 square profile avatars for the home page:
   zhiyuan-xiao.jpg        default (resting)
   zhiyuan-xiao-hover.jpg  hover
-Crop is a square centred above a detected face (OpenCV Haar cascade) using the
-SAME face->square ratio for both images, so the person keeps a roughly identical
-scale/proportion across the two photos. If detection fails the script falls back
-to a centre-square crop and prints a warning; you can instead pass an explicit
-crop centre with --default-center / --hover-center (cx,cy,side in source pixels).
+
+Both photos are cropped to a square centred above a detected face (OpenCV
+multi-cascade Haar detector) using the SAME face->square ratio for both.
+The ratio is shared across all images (min of each image's achievable ratio,
+capped by FACE_RATIO) so the person keeps a roughly identical scale/proportion
+across the two photos — a hover-swap should not visibly zoom.
+
+If detection fails for an image the script falls back to a centre-square crop
+and prints a warning; you can instead pass an explicit crop centre with
+--default-center / --hover-center (cx,cy,side in source pixels).
 
 Example (Windows):
   python tools/build_profile.py \
@@ -24,9 +29,9 @@ import numpy as np
 import cv2
 from PIL import Image
 
-TARGET = 512              # output square edge (matches existing avatar source)
-FACE_RATIO = 3.6          # square side = face_height * FACE_RATIO  (same for both)
-HEADROOM = -0.45          # shift crop centre up by 0.45*face_h (headroom above head)
+TARGET = 512            # output square edge (matches existing avatar source)
+FACE_RATIO = 3.6        # preferred square side / face_height (capped per-image below)
+HEADROOM = -0.45         # shift crop centre up by 0.45*face_h (headroom above head)
 JPEG_QUALITY = 88
 
 _CASCADE_FILES = [
@@ -34,11 +39,11 @@ _CASCADE_FILES = [
     "haarcascade_frontalface_default.xml",
     "haarcascade_profileface.xml",
 ]
-_WINNING_CASCADE = None  # set by detect_face(); read by build() for the face= log line
 
 
 def detect_face(gray: np.ndarray):
-    global _WINNING_CASCADE
+    """Largest face found across multiple Haar cascades, or None.
+    Returns (fx, fy, fw, fh, cascade_name) with plain python ints."""
     best = None
     best_name = None
     for name in _CASCADE_FILES:
@@ -49,13 +54,13 @@ def detect_face(gray: np.ndarray):
             gray, scaleFactor=1.05, minNeighbors=3, minSize=(40, 40)
         )
         for f in faces:
-            if best is None or f[2] * f[3] > best[2] * best[3]:
-                best = (int(f[0]), int(f[1]), int(f[2]), int(f[3]))
+            x, y, w, h = int(f[0]), int(f[1]), int(f[2]), int(f[3])
+            if best is None or w * h > best[2] * best[3]:
+                best = (x, y, w, h)
                 best_name = name
-    _WINNING_CASCADE = best_name
     if best is None:
         return None
-    return best
+    return (best[0], best[1], best[2], best[3], best_name)
 
 
 def square_around(cx: int, cy: int, side: int, W: int, H: int):
@@ -66,36 +71,11 @@ def square_around(cx: int, cy: int, side: int, W: int, H: int):
     return x0, y0, side
 
 
-def build(src: str, out: Path, anchor):
+def load_rgb(src: str):
     try:
-        rgb = np.array(Image.open(src).convert("RGB"))
+        return np.array(Image.open(src).convert("RGB"))
     except Exception as e:
         raise SystemExit(f"cannot read image {src}: {e}")
-    H, W = rgb.shape[:2]
-    gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
-
-    if anchor:
-        cx, cy, side = anchor
-    else:
-        face = detect_face(gray)
-        if face is None:
-            print(f"  [warn] no face in {Path(src).name} -> centre-square crop "
-                  f"(override with --*-center cx,cy,side)", file=sys.stderr)
-            cx, cy, side = W // 2, H // 2, min(W, H)
-        else:
-            fx, fy, fw, fh = face
-            cx = fx + fw // 2
-            cy = int(fy + fh // 2 + HEADROOM * fh)
-            side = int(fh * FACE_RATIO)
-            print(f"  face=({fx},{fy},{fw}x{fh}) via {_WINNING_CASCADE}")
-
-    x0, y0, side = square_around(cx, cy, side, W, H)
-    print(f"  crop rect=({x0},{y0},{side}x{side}) from {W}x{H}")
-    crop = rgb[y0:y0 + side, x0:x0 + side]
-    Image.fromarray(crop).convert("RGB").resize(
-        (TARGET, TARGET), Image.LANCZOS
-    ).save(out, "JPEG", quality=JPEG_QUALITY, optimize=True)
-    print(f"  wrote {out}  ({TARGET}x{TARGET})")
 
 
 def parse_anchor(s: str):
@@ -116,10 +96,61 @@ def main():
 
     out_dir = Path(a.out)
     out_dir.mkdir(parents=True, exist_ok=True)
-    print("default:")
-    build(a.default, out_dir / "zhiyuan-xiao.jpg", parse_anchor(a.default_center))
-    print("hover:")
-    build(a.hover, out_dir / "zhiyuan-xiao-hover.jpg", parse_anchor(a.hover_center))
+
+    targets = [
+        ("default", a.default, out_dir / "zhiyuan-xiao.jpg", parse_anchor(a.default_center)),
+        ("hover",   a.hover,   out_dir / "zhiyuan-xiao-hover.jpg", parse_anchor(a.hover_center)),
+    ]
+
+    # Pass 1: load, detect faces, compute per-image crop centre + max achievable ratio.
+    info = []
+    for which, src, out, anchor in targets:
+        rgb = load_rgb(src)
+        H, W = rgb.shape[:2]
+        gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
+        if anchor is not None:
+            cx, cy, side = anchor
+            fh = None
+            cap = float("inf")
+            print(f"  [{which}] {W}x{H}; manual center=({cx},{cy},side={side})")
+        else:
+            face = detect_face(gray)
+            if face is None:
+                print(f"  [{which}] {W}x{H}; [warn] no face -> centre-square crop "
+                      f"(override with --{which}-center cx,cy,side)", file=sys.stderr)
+                cx, cy, side = W // 2, H // 2, min(W, H)
+                fh = None
+                cap = float("inf")
+            else:
+                fx, fy, fw, fh, name = face
+                cx = int(fx + fw / 2)
+                cy = int(fy + fh / 2 + HEADROOM * fh)
+                cap = min(W, H) / fh   # largest ratio before square_around would clamp
+                print(f"  [{which}] {W}x{H}; face=({fx},{fy},{fw}x{fh}) via {name}")
+        info.append((which, rgb, W, H, cx, cy, fh, cap))
+
+    # Shared ratio: the most we can use across EVERY face-detected image,
+    # capped by the preferred FACE_RATIO. Keeps person scale consistent.
+    caps = [c for *_, fh, c in info if fh is not None]
+    shared = FACE_RATIO if not caps else min([FACE_RATIO] + caps)
+    print(f"  shared face->square ratio: {shared:.3f}")
+
+    # Pass 2: crop + write using the shared ratio.
+    for (which, rgb, W, H, cx, cy, fh, cap), (_, _, out, anchor) in zip(info, targets):
+        if anchor is not None:
+            _, _, side = anchor
+        elif fh is not None:
+            side = int(fh * shared)
+        else:
+            side = min(W, H)
+        x0, y0, side = square_around(cx, cy, side, W, H)
+        ratio_str = f"ratio={side / fh:.3f}" if fh else "ratio=n/a"
+        print(f"  [{which}] crop=({x0},{y0},{side}x{side}) {ratio_str}")
+        crop = rgb[y0:y0 + side, x0:x0 + side]
+        Image.fromarray(crop).convert("RGB").resize(
+            (TARGET, TARGET), Image.LANCZOS
+        ).save(out, "JPEG", quality=JPEG_QUALITY, optimize=True)
+        print(f"  [{which}] wrote {out} ({TARGET}x{TARGET})")
     print("done")
 
 
